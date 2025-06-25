@@ -57,7 +57,8 @@ export default function CheckinPage() {
       const payload = {
         mood: selectedMood,
         message: message.trim(),
-        isAnonymous, // sesuai backend
+        isAnonymous: isAnonymous, // camelCase frontend → diubah di service
+        ...(user?.id && { userId: user.id }), // kirim user_id kalau login
       };
 
       await submitMood(payload);

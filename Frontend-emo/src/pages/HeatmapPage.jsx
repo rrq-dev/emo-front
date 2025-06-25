@@ -45,7 +45,6 @@ export default function HeatmapPage() {
       setError(null);
       const response = await getUserMoods();
 
-      // Handle different response structures
       let data;
       if (response && response.data) {
         data = response.data;
@@ -55,28 +54,32 @@ export default function HeatmapPage() {
         data = [];
       }
 
-      console.log("Raw API Response:", response);
-      console.log("Processed data:", data);
-
       const formatted = Array.isArray(data)
         ? data.map((entry, index) => {
-            // Handle different possible field names from database
-            const userId = entry.user_id || entry.userId || `user${index + 1}`;
-            const userName = entry.user_name || entry.userName || null;
+            const userId =
+              entry.user_id ||
+              entry.userId ||
+              entry?.userId?.$oid ||
+              `user${index + 1}`;
+
+            const userName = entry.user_name || entry.userName || "Unknown";
             const isAnonymous =
               entry.is_anonymous || entry.isAnonymous || false;
-            const mood = entry.mood || "neutral";
+            const mood = entry.mood?.toLowerCase() || "neutral";
             const reflection = entry.reflection || "";
-            const timestamp =
-              entry.timestamp ||
-              entry.created_at ||
-              entry.createdAt ||
-              new Date().toISOString();
+
+            const rawTimestamp = entry.timestamp;
+            let timestamp = new Date();
+            if (typeof rawTimestamp === "string") {
+              timestamp = new Date(rawTimestamp);
+            } else if (rawTimestamp?.$date) {
+              timestamp = new Date(rawTimestamp.$date);
+            }
 
             return {
-              id: entry.id || index,
-              name: isAnonymous ? "Anonymous" : userName || userId,
-              mood: mood.toLowerCase(),
+              id: entry._id?.$oid || index,
+              name: isAnonymous ? "Anonymous" : userName,
+              mood,
               reflection,
               timestamp,
               userId,
@@ -85,7 +88,6 @@ export default function HeatmapPage() {
           })
         : [];
 
-      console.log("Formatted data:", formatted);
       setAllMoods(formatted);
       setLoading(false);
     } catch (err) {
@@ -97,7 +99,7 @@ export default function HeatmapPage() {
 
   useEffect(() => {
     fetchMoods();
-    const interval = setInterval(fetchMoods, 10000); // Reduced frequency to 10 seconds
+    const interval = setInterval(fetchMoods, 10000); // Real-time update setiap 10 detik
     return () => clearInterval(interval);
   }, []);
 
@@ -198,7 +200,7 @@ export default function HeatmapPage() {
               <XAxis dataKey="mood" />
               <YAxis allowDecimals={false} />
               <Tooltip
-                formatter={(value) => [`${value} users`, "Count"]}
+                formatter={(value) => [`${value} users`, "Jumlah"]}
                 labelFormatter={(label) => `Mood: ${label}`}
               />
               <Bar dataKey="count" fill="#8884d8">
