@@ -30,13 +30,9 @@ export function RegisterPage() {
         password: formData.password,
       });
       Swal.fire("Registrasi Berhasil", "Akun kamu telah dibuat!", "success");
-      navigate("/login"); // ⬅️ redirect ke login setelah sukses
+      navigate("/login");
     } catch (err) {
-      Swal.fire(
-        "Gagal",
-        err.response?.data?.message || "Registrasi gagal",
-        "error"
-      );
+      Swal.fire("Gagal", err.message || "Registrasi gagal", "error");
     }
   };
 

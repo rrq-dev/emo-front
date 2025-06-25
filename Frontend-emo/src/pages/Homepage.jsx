@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 
 export default function Home() {
   const features = [
@@ -12,22 +13,35 @@ export default function Home() {
     },
     {
       title: "Heatmap Emosi",
-      description: "Analisa mood harian tim dalam tampilan grafik visual",
+      description: "Analisa mood harian pengguna dalam tampilan grafik visual",
       link: "/heatmap",
       emoji: "📊",
       color: "from-yellow-100 to-yellow-200",
     },
     {
-      title: "Saran & Refleksi",
-      description: "Dapatkan insight dan refleksi emosional berdasarkan mood",
+      title: "Curhatan dan Saran",
+      description: "Curhatan dan saran terkait emosimu",
       link: "/refleksi",
       emoji: "💡",
       color: "from-green-100 to-green-200",
     },
   ];
 
-  const quote =
-    "“Perjalanan mengenal emosi bukan tentang menghindari yang buruk, tetapi merayakan pemahaman tentang diri sendiri.”";
+  const quotes = [
+    "“Perjalanan mengenal emosi bukan tentang menghindari yang buruk, tetapi merayakan pemahaman tentang diri sendiri.”",
+    "“Tidak apa-apa tidak baik-baik saja. Yang penting, jangan berhenti mencoba.”",
+    "“Setiap emosi adalah pesan. Dengarkan, bukan lawan.”",
+    "“Bahagia bukan tujuan akhir, tapi teman di sepanjang perjalanan.”",
+    "“Merasakan artinya hidup. Jadi, izinkan dirimu merasakan.”",
+  ];
+
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % quotes.length);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [quotes.length]);
 
   return (
     <motion.div
@@ -40,16 +54,27 @@ export default function Home() {
         {/* Hero Section */}
         <motion.section
           className="text-center py-16 px-4 max-w-4xl mx-auto"
-          initial={{ y: -20, opacity: 0 }}
+          initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 80, damping: 12 }}
         >
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">
+          <motion.h1
+            className="text-5xl font-bold text-gray-800 mb-4"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 100, damping: 10 }}
+          >
             👋 Selamat Datang di <span className="text-primary">EmoBuddy</span>
-          </h1>
-          <p className="text-lg text-gray-600 mb-6">
+          </motion.h1>
+          <motion.p
+            className="text-lg text-gray-600 mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
             Kenali, catat, dan refleksikan emosimu bersama platform kolaboratif
             ini.
-          </p>
+          </motion.p>
         </motion.section>
 
         {/* Feature Cards */}
@@ -81,9 +106,9 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Daily Quote or Motivational Message */}
+        {/* Daily Quote Section */}
         <motion.section
-          className="bg-white/70 backdrop-blur-lg mx-6 md:mx-auto md:max-w-3xl text-center rounded-lg p-6 mt-4 shadow"
+          className="bg-white/70 backdrop-blur-lg mx-6 md:mx-auto md:max-w-3xl text-center rounded-lg p-6 mt-4 shadow relative"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -91,7 +116,20 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-2 text-gray-700">
             🌟 Motivasi Hari Ini
           </h2>
-          <p className="italic text-gray-600">{quote}</p>
+          <div className="h-20 flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={currentQuoteIndex}
+                className="italic text-gray-600"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.5 }}
+              >
+                {quotes[currentQuoteIndex]}
+              </motion.p>
+            </AnimatePresence>
+          </div>
         </motion.section>
       </div>
 
@@ -103,10 +141,11 @@ export default function Home() {
         transition={{ delay: 0.7 }}
       >
         <p>
-          © {new Date().getFullYear()} EmoBuddy. Dibuat dengan 💜 oleh Adit.
+          © {new Date().getFullYear()} EmoBuddy. Dibuat dengan 💜 oleh Adit
+          Gantenk.
         </p>
         <p className="text-xs mt-1">
-          Versi Beta – Emosi kamu aman bersama kami.
+          Versi Beta – Curhatkan emosi kamu disini.
         </p>
       </motion.footer>
     </motion.div>

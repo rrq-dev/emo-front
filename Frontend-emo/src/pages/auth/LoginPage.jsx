@@ -6,16 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { loginUser } from "@/src/services/auth";
-import { useAuth } from "@/src/context/AuthContext"; // ✅ NEW
+import { useAuth } from "@/src/context/AuthContext";
 
 export function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false); // ✅ Loading state
 
   const navigate = useNavigate();
-  const { login } = useAuth(); // ✅ NEW
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,24 +24,32 @@ export function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
-      const data = await loginUser(formData);
+      // ✅ Now loginUser returns { token, user }
+      const { user } = await loginUser(formData);
 
-      // ✅ Simpan user dan token ke localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      // ✅ Simpan ke AuthContext
-      login(data.user);
+      // ✅ Update context
+      login(user);
 
       Swal.fire("Berhasil!", "Login berhasil!", "success");
       navigate("/");
     } catch (err) {
-      Swal.fire(
-        "Oops!",
-        err.response?.data?.message || "Login gagal!",
-        "error"
-      );
+      console.error("Login error:", err);
+
+      // ✅ Better error handling
+      let errorMessage = "Login gagal!";
+
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      Swal.fire("Oops!", errorMessage, "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -71,6 +80,7 @@ export function LoginPage() {
               value={formData.email}
               onChange={handleChange}
               required
+              disabled={isLoading}
             />
           </div>
           <div>
@@ -83,10 +93,16 @@ export function LoginPage() {
               value={formData.password}
               onChange={handleChange}
               required
+              disabled={isLoading}
             />
           </div>
-          <Button type="submit" className="w-full mt-2" variant="default">
-            Login
+          <Button
+            type="submit"
+            className="w-full mt-2"
+            variant="default"
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Login"}
           </Button>
         </form>
         <p className="text-sm text-center mt-4 text-gray-600">

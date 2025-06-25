@@ -1,18 +1,25 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getReflection } from "@/src/services/mood";
+import { getLatestReflection } from "@/src/services/mood";
 
 export default function RefleksiPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const userID = "user-xyz"; // ganti sesuai mekanisme auth
+  const [polling, setPolling] = useState(true);
 
   useEffect(() => {
-    const fetchMood = async () => {
+    let interval;
+
+    const fetchReflection = async () => {
       try {
-        const res = await getReflection(userID);
-        const latest = res.data?.[0]; // ambil mood terbaru
-        if (latest) setData(latest);
+        const res = await getLatestReflection();
+        const latest = res?.[0];
+        if (latest) {
+          setData(latest);
+          if (latest.ai_reply) {
+            setPolling(false); // Stop polling when reply is ready
+          }
+        }
       } catch (error) {
         console.error("Gagal fetch refleksi:", error.message);
       } finally {
@@ -20,12 +27,21 @@ export default function RefleksiPage() {
       }
     };
 
-    fetchMood();
-  }, []);
+    fetchReflection();
+
+    // Auto polling tiap 3 detik kalau belum ada ai_reply
+    interval = setInterval(() => {
+      if (polling) {
+        fetchReflection();
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [polling]);
 
   return (
     <motion.div
-      className="min-h-screen bg-gradient-to-br from-purple-50 to-yellow-50 py-10 px-4"
+      className="min-h-screen bg-gradient-to-br from-pink-50 to-blue-50 py-10 px-4"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -35,37 +51,55 @@ export default function RefleksiPage() {
           <p className="text-gray-500">Loading...</p>
         ) : data ? (
           <>
-            <motion.div
-              className="text-5xl mb-4"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
+            <motion.h2
+              className="text-xl font-semibold mb-2 text-gray-800"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              {data.mood === "happy" && "😊"}
-              {data.mood === "sad" && "😞"}
-              {data.mood === "neutral" && "😐"}
-              {data.mood === "frustrated" && "😡"}
-            </motion.div>
-            <motion.h2
-              className="text-2xl font-semibold mb-2 text-gray-800 capitalize"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              Mood kamu: {data.mood}
+              Terakhir kamu curhat:
             </motion.h2>
             <motion.p
-              className="text-md text-gray-700"
+              className="text-md text-gray-700 italic mb-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.5 }}
             >
-              {data.message}
+              "{data.message}"
             </motion.p>
+
+            <motion.h3
+              className="text-lg font-medium text-gray-900 mt-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
+              Respon Gemini:
+            </motion.h3>
+
+            {data.ai_reply ? (
+              <motion.p
+                className="text-md text-green-800 mt-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.9 }}
+              >
+                {data.ai_reply}
+              </motion.p>
+            ) : (
+              <motion.p
+                className="text-sm text-gray-500 mt-2 italic"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.9 }}
+              >
+                Sedang merespon curhatanmu... ✨
+              </motion.p>
+            )}
           </>
         ) : (
           <p className="text-gray-600">
-            Belum ada data mood ditemukan. Silakan check-in dulu ya!
+            Belum ada curhatan ditemukan. Curhat dulu yuk!
           </p>
         )}
       </div>

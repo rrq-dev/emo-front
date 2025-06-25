@@ -8,7 +8,7 @@ const navLinks = [
   { to: "/", label: "Beranda" },
   { to: "/check-in", label: "Check-In" },
   { to: "/heatmap", label: "Heatmap" },
-  { to: "/refleksi", label: "Refleksi" },
+  { to: "/refleksi", label: "Curhat" },
 ];
 
 export default function Navbar() {

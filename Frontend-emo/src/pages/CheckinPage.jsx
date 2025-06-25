@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 import { submitMood } from "@/src/services/mood";
 import { useAuth } from "@/src/context/authContext";
+import { useNavigate } from "react-router-dom";
 
 const moods = [
   {
@@ -36,6 +37,7 @@ export default function CheckinPage() {
   const [selectedMood, setSelectedMood] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const isAnonymous = !user || !user.id;
 
@@ -55,7 +57,7 @@ export default function CheckinPage() {
       const payload = {
         mood: selectedMood,
         message: message.trim(),
-        is_anonymous: isAnonymous,
+        isAnonymous, // sesuai backend
       };
 
       await submitMood(payload);
@@ -68,6 +70,8 @@ export default function CheckinPage() {
           : `Mood kamu tercatat, ${user.name}!`,
         timer: 2000,
         showConfirmButton: false,
+      }).then(() => {
+        navigate("/refleksi");
       });
 
       setSelectedMood("");
@@ -76,7 +80,7 @@ export default function CheckinPage() {
       Swal.fire({
         icon: "error",
         title: "Gagal mencatat mood 😢",
-        text: err.message || err.error || "Coba lagi nanti ya!",
+        text: err.message || "Coba lagi nanti ya!",
       });
     } finally {
       setLoading(false);
@@ -164,7 +168,7 @@ export default function CheckinPage() {
             <motion.textarea
               className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary mb-4"
               rows={4}
-              placeholder="Ceritain kenapa kamu merasa seperti ini... (opsional)"
+              placeholder="Ceritain kenapa kamu merasa seperti ini..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               initial={{ opacity: 0 }}
@@ -176,12 +180,19 @@ export default function CheckinPage() {
 
         <motion.button
           onClick={handleSubmit}
-          className="w-full bg-primary text-white py-3 rounded-md text-lg hover:bg-primary/90 transition"
+          className="w-full bg-primary text-white py-3 rounded-md text-lg hover:bg-primary/90 transition flex items-center justify-center"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           disabled={loading}
         >
-          {loading ? "Mengirim..." : "Submit Mood"}
+          {loading ? (
+            <div className="flex items-center gap-2">
+              <span className="border-2 border-white border-t-transparent rounded-full w-5 h-5 animate-spin"></span>
+              <span className="text-sm">Lagi ngirimin vibes kamu...</span>
+            </div>
+          ) : (
+            "Submit Mood"
+          )}
         </motion.button>
       </div>
     </motion.div>

@@ -1,31 +1,64 @@
-import api from "@/src/services/api"; // Axios instance
+// src/services/auth.js
+import api from "./api";
 
-// REGISTER
 export const registerUser = async ({ name, email, password }) => {
   try {
-    const res = await api.post("/register", {
-      name,
-      email,
-      password,
-    });
+    const res = await api.post(
+      "/register",
+      {
+        name,
+        email,
+        password,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
     return res.data;
   } catch (err) {
     console.error("Gagal register:", err.response?.data || err.message);
-    throw err;
+    throw new Error(err.response?.data?.error || "Registrasi gagal");
   }
 };
 
-// LOGIN
 export const loginUser = async ({ email, password }) => {
   try {
-    const res = await api.post("/login", {
-      email,
-      password,
-    });
-    return res.data; // biasanya akan dapat token + user info
+    const res = await api.post(
+      "/login",
+      { email, password },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const { token, user, message } = res.data;
+
+    if (!token || !user) {
+      throw new Error("Token atau user tidak valid dari server");
+    }
+
+    // Simpan token dan user ke localStorage
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    return { token, user, message };
   } catch (err) {
-    console.error("Gagal login:", err.response?.data || err.message);
-    throw err;
+    const status = err.response?.status;
+    const data = err.response?.data;
+
+    let errorMsg = data?.error || data?.message || err.message || "Login gagal";
+
+    if (status === 500) {
+      errorMsg = `Server error: ${data?.details || errorMsg}`;
+    }
+
+    console.error("Login error:", errorMsg);
+    throw new Error(errorMsg);
   }
 };
 

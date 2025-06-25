@@ -1,22 +1,27 @@
-// src/lib/axios.js
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:1506/api/", // ganti kalau pakai domain lain
+  baseURL: "https://emo-back.onrender.com/api", // backend URL kamu
 });
 
-// Interceptor untuk kirim token setiap request
+// Interceptor: inject Authorization header jika tidak skipAuth
 api.interceptors.request.use(
   (config) => {
+    if (config.skipAuth) {
+      return config; // jika flag ini aktif, jangan inject Authorization
+    }
+
     const token = localStorage.getItem("token");
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
     }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;
